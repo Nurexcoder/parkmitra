@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ParkMitra - Setup & Quick Start Guide
 
-## Getting Started
+## 📋 Prerequisites
+- Node.js 18+
+- MongoDB (local or Atlas)
 
-First, run the development server:
+## 🚀 Quick Start
 
+### 1. Install Dependencies
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure Environment
+Create/edit `.env.local`:
+```env
+MONGODB_URI=mongodb://localhost:27017/parkmitra
+JWT_SECRET=your-secret-key-here
+RESEND_API_KEY=re_xxxxxxxxxxxxx
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> Get free Resend API key at [resend.com](https://resend.com)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Seed Database
+```bash
+npm run seed
+```
 
-## Learn More
+Creates admin: `admin@parkmitra.com` / `admin123`
 
-To learn more about Next.js, take a look at the following resources:
+### 4. Start Server
+```bash
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🎯 First Steps
 
-## Deploy on Vercel
+1. **Login** at `/login` with admin credentials
+2. **Add Rider** at Riders → Add New Rider
+3. **Check Email** for QR code
+4. **Scan Entry** at Entry page
+5. **Scan Exit** at Exit page
+6. **View Dashboard** for stats
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📱 Features
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- ✅ Admin authentication (JWT)
+- ✅ Rider management with QR codes
+- ✅ Email QR delivery
+- ✅ Camera-based QR scanning
+- ✅ Entry/exit tracking
+- ✅ Automated payment (₹20/₹30)
+- ✅ Real-time dashboard
+- ✅ Activity logs
+
+## 🎨 Tech Stack
+
+Next.js 16 • TypeScript • MongoDB • Tailwind CSS • JWT • Resend
+
+---
+
+**Need help?** Check the walkthrough documentation for detailed information.
