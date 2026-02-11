@@ -69,21 +69,21 @@ export const POST = withAuth(async (request: NextRequest) => {
       );
     }
 
-    // Create new rider
+    // Create new rider instance (generates _id automatically)
     const rider = new Rider({
       name,
       phone,
       vehicle_number: vehicle_number.toUpperCase(),
-      qr_code: '', // Will be set after generating
+      qr_code: 'placeholder', // Temporary placeholder
     });
-
-    await rider.save();
 
     // Generate QR code with rider ID
     const qrCodeDataURL = await generateQRCode(rider._id.toString());
     
-    // Update rider with QR code
+    // Set the real QR code
     rider.qr_code = qrCodeDataURL;
+
+    // Save rider with QR code
     await rider.save();
 
     // Send QR code via email
