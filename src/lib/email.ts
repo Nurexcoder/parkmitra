@@ -12,7 +12,7 @@ export async function sendQREmail(
     const base64Data = qrCodeBase64.split(',')[1];
     
     await resend.emails.send({
-      from: 'ParkMitra <onboarding@resend.dev>',
+      from: 'ParkMitra <noreply@parkmitra.growthloopslabs.com>',
       to: riderEmail,
       subject: 'Your ParkMitra QR Code',
       html: `
