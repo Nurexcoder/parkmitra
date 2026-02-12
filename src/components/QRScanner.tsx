@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { BrowserMultiFormatReader } from '@zxing/library';
+import { BrowserMultiFormatReader, VideoInputDevice } from '@zxing/library';
 
 interface QRScannerProps {
   onScan: (data: string) => void;
@@ -12,11 +12,35 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string>('');
+  const [devices, setDevices] = useState<VideoInputDevice[]>([]);
+  const [currentDeviceIndex, setCurrentDeviceIndex] = useState(0);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
 
   useEffect(() => {
     const codeReader = new BrowserMultiFormatReader();
     readerRef.current = codeReader;
+
+    const loadDevices = async () => {
+      try {
+        const videoInputDevices = await codeReader.listVideoInputDevices();
+        setDevices(videoInputDevices);
+        
+        // Find back camera index if possible
+        const backCameraIndex = videoInputDevices.findIndex(device => 
+          device.label.toLowerCase().includes('back') || 
+          device.label.toLowerCase().includes('rear') ||
+          device.label.toLowerCase().includes('environment')
+        );
+        
+        if (backCameraIndex !== -1) {
+          setCurrentDeviceIndex(backCameraIndex);
+        }
+      } catch (err) {
+        console.error('Error listing video devices:', err);
+      }
+    };
+
+    loadDevices();
 
     return () => {
       if (readerRef.current) {
@@ -25,7 +49,7 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
     };
   }, []);
 
-  const startScanning = async () => {
+  const startScanning = async (deviceIndex: number = currentDeviceIndex) => {
     try {
       setError('');
       setIsScanning(true);
@@ -34,14 +58,18 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
         throw new Error('Scanner not initialized');
       }
 
-      const videoInputDevices = await readerRef.current.listVideoInputDevices();
-      
-      if (videoInputDevices.length === 0) {
-        throw new Error('No camera found');
+      if (devices.length === 0) {
+        const videoInputDevices = await readerRef.current.listVideoInputDevices();
+        if (videoInputDevices.length === 0) {
+          throw new Error('No camera found');
+        }
+        setDevices(videoInputDevices);
       }
 
-      // Use the first available camera (usually back camera on mobile)
-      const selectedDeviceId = videoInputDevices[0].deviceId;
+      const selectedDeviceId = devices[deviceIndex]?.deviceId || devices[0].deviceId;
+
+      // Reset before starting a new one
+      readerRef.current.reset();
 
       readerRef.current.decodeFromVideoDevice(
         selectedDeviceId,
@@ -72,6 +100,18 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
       readerRef.current.reset();
     }
     setIsScanning(false);
+  };
+
+  const switchCamera = () => {
+    if (devices.length <= 1) return;
+    
+    const nextIndex = (currentDeviceIndex + 1) % devices.length;
+    setCurrentDeviceIndex(nextIndex);
+    
+    if (isScanning) {
+      // Re-start with next device
+      startScanning(nextIndex);
+    }
   };
 
   return (
@@ -107,7 +147,7 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
         {isScanning && (
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute inset-0 border-2 border-purple-500 opacity-50 animate-pulse"></div>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-4 border-purple-500 rounded-lg"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 md:w-48 md:h-48 border-4 border-purple-500 rounded-lg"></div>
           </div>
         )}
       </div>
@@ -118,21 +158,48 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
         </div>
       )}
 
-      <div className="mt-4 flex gap-3">
-        {!isScanning ? (
-          <button
-            onClick={startScanning}
-            className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg"
-          >
-            Start Scanning
-          </button>
-        ) : (
-          <button
-            onClick={stopScanning}
-            className="flex-1 bg-red-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-red-700 transition-all shadow-lg"
-          >
-            Stop Scanning
-          </button>
+      <div className="mt-4 flex flex-col gap-3">
+        <div className="flex gap-3">
+          {!isScanning ? (
+            <button
+              onClick={() => startScanning()}
+              className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Start Scanning
+            </button>
+          ) : (
+            <button
+              onClick={stopScanning}
+              className="flex-1 bg-red-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2"
+            >
+               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Stop
+            </button>
+          )}
+          
+          {devices.length > 1 && (
+            <button
+              onClick={switchCamera}
+              className="bg-gray-100 text-gray-700 p-3 rounded-lg hover:bg-gray-200 transition-colors shadow-sm"
+              title="Switch Camera"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+            </button>
+          )}
+        </div>
+        
+        {devices.length > 0 && (
+          <p className="text-center text-xs text-gray-500">
+            Using: {devices[currentDeviceIndex]?.label || `Camera ${currentDeviceIndex + 1}`}
+          </p>
         )}
       </div>
     </div>

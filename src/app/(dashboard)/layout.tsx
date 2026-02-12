@@ -40,6 +40,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: '/entry', label: 'Entry', icon: '🚗' },
     { href: '/exit', label: 'Exit', icon: '🚙' },
     { href: '/riders', label: 'Riders', icon: '👥' },
+    { href: '/settings/admins', label: 'Admins', icon: '🛡️' },
+    { href: '/settings/password', label: 'Settings', icon: '⚙️' },
   ];
 
   if (!admin) {
@@ -88,7 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           {/* Navigation Items */}
-          <nav className=" mt-24 md:mt-6 flex-1 overflow-y-auto">
+          <nav className="mt-24 md:mt-6 flex-1 overflow-y-auto">
             {navItems.map((item) => (
               <Link
                 key={item.href}

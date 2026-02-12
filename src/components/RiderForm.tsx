@@ -1,8 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function RiderForm() {
+interface RiderFormProps {
+  initialData?: {
+    _id: string;
+    name: string;
+    phone: string;
+    vehicle_number: string;
+    email: string;
+  };
+  isEdit?: boolean;
+}
+
+export default function RiderForm({ initialData, isEdit = false }: RiderFormProps) {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -12,6 +25,17 @@ export default function RiderForm() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name,
+        phone: initialData.phone,
+        vehicle_number: initialData.vehicle_number,
+        email: initialData.email || '',
+      });
+    }
+  }, [initialData]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -19,8 +43,11 @@ export default function RiderForm() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/riders', {
-        method: 'POST',
+      const url = isEdit ? `/api/riders/${initialData?._id}` : '/api/riders';
+      const method = isEdit ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -31,10 +58,15 @@ export default function RiderForm() {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage({ type: 'success', text: data.message || 'Rider created successfully!' });
-        setFormData({ name: '', phone: '', vehicle_number: '', email: '' });
+        setMessage({ type: 'success', text: data.message || `Rider ${isEdit ? 'updated' : 'created'} successfully!` });
+        if (!isEdit) {
+          setFormData({ name: '', phone: '', vehicle_number: '', email: '' });
+        } else {
+          // If edit, redirect back after a short delay
+          setTimeout(() => router.push('/riders'), 1500);
+        }
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to create rider' });
+        setMessage({ type: 'error', text: data.error || `Failed to ${isEdit ? 'update' : 'create'} rider` });
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'Network error. Please try again.' });
@@ -45,7 +77,9 @@ export default function RiderForm() {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Add New Rider</h2>
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">
+        {isEdit ? 'Edit Rider' : 'Add New Rider'}
+      </h2>
 
       {message && (
         <div
@@ -97,7 +131,7 @@ export default function RiderForm() {
             required
             value={formData.vehicle_number}
             onChange={(e) => setFormData({ ...formData, vehicle_number: e.target.value.toUpperCase() })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent uppercase"
+            className="w-full text-base px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent uppercase"
             placeholder="WB 01 AB 1234"
           />
         </div>
@@ -117,13 +151,24 @@ export default function RiderForm() {
         </div>
       </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {loading ? 'Creating...' : 'Create Rider & Send QR'}
-      </button>
+      <div className="flex gap-3">
+        {isEdit && (
+          <button
+            type="button"
+            onClick={() => router.push('/riders')}
+            className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 transition-all border border-gray-300"
+          >
+            Cancel
+          </button>
+        )}
+        <button
+          type="submit"
+          disabled={loading}
+          className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? 'Processing...' : isEdit ? 'Update Rider' : 'Create Rider & Send QR'}
+        </button>
+      </div>
     </form>
   );
 }

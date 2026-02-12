@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface Rider {
   _id: string;
@@ -10,12 +11,15 @@ interface Rider {
   vehicle_number: string;
   created_at: string;
   qr_code?: string;
+  email?: string;
 }
 
 export default function RidersPage() {
+  const router = useRouter();
   const [riders, setRiders] = useState<Rider[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRiders();
@@ -40,6 +44,28 @@ export default function RidersPage() {
       console.error('Failed to fetch riders:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/riders/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setRiders(riders.filter(r => r._id !== id));
+        setDeleteConfirm(null);
+      } else {
+        alert('Failed to delete rider');
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('Network error');
     }
   };
 
@@ -79,14 +105,14 @@ export default function RidersPage() {
       ) : (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px]">
+            <table className="w-full min-w-[800px]">
               <thead className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold whitespace-nowrap">Vehicle Number</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold whitespace-nowrap">Name</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold whitespace-nowrap">Phone</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold whitespace-nowrap">Created</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold whitespace-nowrap">Actions</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold whitespace-nowrap text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -106,23 +132,64 @@ export default function RidersPage() {
                         {new Date(rider.created_at).toLocaleDateString('en-IN')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                         {rider.qr_code && (
+                        <div className="flex justify-center gap-2">
+                           {rider.qr_code && (
+                             <button
+                               onClick={() => {
+                                 const win = window.open();
+                                 win?.document.write(`<img src="${rider.qr_code}" style="width:100%;max-width:300px;">`);
+                               }}
+                               className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                               title="View QR"
+                             >
+                               🔍
+                             </button>
+                           )}
                            <button
-                             onClick={() => {
-                               const win = window.open();
-                               win?.document.write(`<img src="${rider.qr_code}" style="width:100%;max-width:300px;">`);
-                             }}
-                             className="text-purple-600 hover:text-purple-800 text-sm font-medium"
+                             onClick={() => router.push(`/riders/edit/${rider._id}`)}
+                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                             title="Edit"
                            >
-                             View QR
+                             ✏️
                            </button>
-                         )}
+                           <button
+                             onClick={() => setDeleteConfirm(rider._id)}
+                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                             title="Delete"
+                           >
+                             🗑️
+                           </button>
+                        </div>
                       </td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Confirm Delete</h3>
+            <p className="text-gray-600 mb-6">Are you sure you want to delete this rider? This action cannot be undone.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(deleteConfirm)}
+                className="flex-1 bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
