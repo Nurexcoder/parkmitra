@@ -79,15 +79,15 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
       <div className="relative bg-gray-900 rounded-lg overflow-hidden shadow-xl">
         <video
           ref={videoRef}
-          className="w-full h-80 object-cover"
+          className="w-full aspect-video md:h-80 object-cover"
           style={{ display: isScanning ? 'block' : 'none' }}
         />
         
         {!isScanning && (
-          <div className="h-80 flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-            <div className="text-center">
+          <div className="aspect-video md:h-80 flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+            <div className="text-center p-6">
               <svg
-                className="w-24 h-24 mx-auto mb-4 text-gray-600"
+                className="w-16 h-16 md:w-24 md:h-24 mx-auto mb-4 text-gray-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
