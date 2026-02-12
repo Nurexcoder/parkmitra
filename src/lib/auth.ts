@@ -49,8 +49,8 @@ export function getAdminFromRequest(request: NextRequest): JWTPayload | null {
 }
 
 // Middleware to protect routes
-export function withAuth(handler: (request: NextRequest, admin: JWTPayload) => Promise<Response>) {
-  return async (request: NextRequest) => {
+export function withAuth(handler: (request: NextRequest, admin: JWTPayload, context: any) => Promise<Response>) {
+  return async (request: NextRequest, context: any) => {
     const admin = getAdminFromRequest(request);
     
     if (!admin) {
@@ -60,6 +60,6 @@ export function withAuth(handler: (request: NextRequest, admin: JWTPayload) => P
       );
     }
 
-    return handler(request, admin);
+    return handler(request, admin, context);
   };
 }

@@ -2,10 +2,10 @@ import { NextRequest } from 'next/server';
 import { connectDB } from '@/lib/db';
 import Rider from '@/models/Rider';
 import ParkingSession from '@/models/ParkingSession';
-import { withAuth } from '@/lib/auth';
+import { withAuth, JWTPayload } from '@/lib/auth';
 
 // GET /api/riders/[id] - Fetch single rider
-export const GET = withAuth(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const GET = withAuth(async (request: NextRequest, admin: JWTPayload, { params }: { params: { id: string } }) => {
   try {
     await connectDB();
     const rider = await Rider.findById(params.id);
@@ -21,7 +21,7 @@ export const GET = withAuth(async (request: NextRequest, { params }: { params: {
 });
 
 // PUT /api/riders/[id] - Update rider details
-export const PUT = withAuth(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const PUT = withAuth(async (request: NextRequest, admin: JWTPayload, { params }: { params: { id: string } }) => {
   try {
     await connectDB();
     const body = await request.json();
@@ -60,23 +60,15 @@ export const PUT = withAuth(async (request: NextRequest, { params }: { params: {
 });
 
 // DELETE /api/riders/[id] - Delete rider
-export const DELETE = withAuth(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const DELETE = withAuth(async (request: NextRequest, admin: JWTPayload, { params }: { params: { id: string } }) => {
   try {
     await connectDB();
-    
-    // Check if rider has active sessions or history?
-    // For now, we allow hard delete but it's dangerous for data integrity.
-    // In a real app, maybe soft delete or keep logs.
     
     const deletedRider = await Rider.findByIdAndDelete(params.id);
     
     if (!deletedRider) {
       return Response.json({ error: 'Rider not found' }, { status: 404 });
     }
-
-    // Optionally delete sessions too? No, usually keep logs.
-    // But for a clean system we might want to cleanup.
-    // Let's keep sessions for now to avoid losing financial data.
 
     return Response.json({ success: true, message: 'Rider deleted successfully' });
   } catch (error) {
