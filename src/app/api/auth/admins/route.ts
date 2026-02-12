@@ -39,7 +39,7 @@ export const POST = withAuth(async (request: NextRequest) => {
     const newAdmin = await Admin.create({
       name,
       email,
-      password: hashedPassword,
+      password_hash: hashedPassword,
     });
 
     return Response.json({ 

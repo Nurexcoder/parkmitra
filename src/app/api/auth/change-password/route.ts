@@ -41,7 +41,7 @@ export const POST = withAuth(async (request: NextRequest) => {
     }
 
     // Hash and save new password
-    admin.password = await bcrypt.hash(newPassword, 10);
+    admin.password_hash = await bcrypt.hash(newPassword, 10);
     await admin.save();
 
     return Response.json({ success: true, message: 'Password updated successfully' });

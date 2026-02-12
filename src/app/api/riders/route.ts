@@ -73,6 +73,7 @@ export const POST = withAuth(async (request: NextRequest) => {
     const rider = new Rider({
       name,
       phone,
+      email,
       vehicle_number: vehicle_number.toUpperCase(),
       qr_code: 'placeholder', // Temporary placeholder
     });

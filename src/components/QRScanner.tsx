@@ -12,7 +12,7 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string>('');
-  const [devices, setDevices] = useState<VideoInputDevice[]>([]);
+  const [devices, setDevices] = useState<any[]>([]);
   const [currentDeviceIndex, setCurrentDeviceIndex] = useState(0);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
 
