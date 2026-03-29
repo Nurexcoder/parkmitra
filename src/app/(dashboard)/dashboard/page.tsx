@@ -3,14 +3,12 @@ import SessionsTable from '@/components/SessionsTable';
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1>
-        <p className="text-gray-600">Real-time parking overview and statistics</p>
+        <h1 className="text-xl font-semibold text-zinc-100 tracking-tight">Dashboard</h1>
+        <p className="text-zinc-500 text-sm mt-0.5">Real-time parking overview and statistics</p>
       </div>
-
       <DashboardStats />
-
       <SessionsTable />
     </div>
   );

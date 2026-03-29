@@ -14,7 +14,6 @@ export default function DashboardStats() {
 
   useEffect(() => {
     fetchStats();
-    // Refresh stats every 30 seconds
     const interval = setInterval(fetchStats, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -23,11 +22,8 @@ export default function DashboardStats() {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/dashboard/stats', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       if (response.ok) {
         const data = await response.json();
         setStats(data.stats);
@@ -41,63 +37,61 @@ export default function DashboardStats() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white rounded-xl p-6 shadow-lg animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-            <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div key={i} className="bg-[#161616] border border-white/8 rounded-xl p-5 animate-pulse">
+            <div className="h-3 bg-white/8 rounded w-1/2 mb-4" />
+            <div className="h-8 bg-white/8 rounded w-1/3" />
           </div>
         ))}
       </div>
     );
   }
 
+  const cards = [
+    {
+      label: 'Currently inside',
+      value: stats?.vehicles_inside ?? 0,
+      color: 'text-emerald-400',
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'Entry today',
+      value: stats?.total_today ?? 0,
+      color: 'text-blue-400',
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'Revenue today',
+      value: `₹${stats?.revenue_today ?? 0}`,
+      color: 'text-amber-400',
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      ),
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Vehicles Inside */}
-      <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-6 shadow-lg text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-green-100 text-sm font-medium mb-1">Currently Inside</p>
-            <p className="text-4xl font-bold">{stats?.vehicles_inside || 0}</p>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {cards.map(({ label, value, color, icon }) => (
+        <div key={label} className="bg-[#161616] border border-white/8 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">{label}</p>
+            <span className={`${color} opacity-60`}>{icon}</span>
           </div>
-          <div className="bg-white bg-opacity-20 rounded-full p-4">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-            </svg>
-          </div>
+          <p className={`text-3xl font-bold ${color}`}>{value}</p>
         </div>
-      </div>
-
-      {/* Total Today */}
-      <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl p-6 shadow-lg text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-blue-100 text-sm font-medium mb-1">Total Today</p>
-            <p className="text-4xl font-bold">{stats?.total_today || 0}</p>
-          </div>
-          <div className="bg-white bg-opacity-20 rounded-full p-4">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      {/* Revenue Today */}
-      <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl p-6 shadow-lg text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-purple-100 text-sm font-medium mb-1">Revenue Today</p>
-            <p className="text-4xl font-bold">₹{stats?.revenue_today || 0}</p>
-          </div>
-          <div className="bg-white bg-opacity-20 rounded-full p-4">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-        </div>
-      </div>
+      ))}
     </div>
   );
 }

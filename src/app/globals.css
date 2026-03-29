@@ -21,5 +21,14 @@ body {
 }
 
 input {
-    color: black;
+    color: inherit;
+}
+
+@keyframes scan-line {
+  0%   { top: 12%; }
+  50%  { top: 82%; }
+  100% { top: 12%; }
+}
+.animate-scan-line {
+  animation: scan-line 2s ease-in-out infinite;
 }

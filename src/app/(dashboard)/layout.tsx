@@ -4,30 +4,47 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 
+const navItems = [
+  {
+    href: '/dashboard', label: 'Dashboard',
+    icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+  },
+  {
+    href: '/entry', label: 'Entry',
+    icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>,
+  },
+  {
+    href: '/exit', label: 'Exit',
+    icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>,
+  },
+  {
+    href: '/riders', label: 'Riders',
+    icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
+  },
+  {
+    href: '/settings/admins', label: 'Admins',
+    icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>,
+  },
+  {
+    href: '/settings/password', label: 'Settings',
+    icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>,
+  },
+];
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [admin, setAdmin] = useState<any>(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     const adminData = localStorage.getItem('admin');
-
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
-    if (adminData) {
-      setAdmin(JSON.parse(adminData));
-    }
+    if (!token) { router.push('/login'); return; }
+    if (adminData) setAdmin(JSON.parse(adminData));
   }, [router]);
 
-  // Close mobile menu when route changes
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [pathname]);
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -35,110 +52,102 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     router.push('/login');
   };
 
-  const navItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: '📊' },
-    { href: '/entry', label: 'Entry', icon: '🚗' },
-    { href: '/exit', label: 'Exit', icon: '🚙' },
-    { href: '/riders', label: 'Riders', icon: '👥' },
-    { href: '/settings/admins', label: 'Admins', icon: '🛡️' },
-    { href: '/settings/password', label: 'Settings', icon: '⚙️' },
-  ];
-
   if (!admin) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen bg-[#0c0c0c] flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
-      {/* Mobile Header */}
-      <div className="md:hidden bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4 flex justify-between items-center sticky top-0 z-50 shadow-md">
-        <div className="flex items-center space-x-2">
-          <div className="text-2xl">🅿️</div>
-          <h1 className="text-xl font-bold">ParkMitra</h1>
+    <div className="min-h-screen bg-[#0c0c0c] text-white flex">
+
+      {/* Mobile top bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#0e0e0e] border-b border-white/8 flex items-center justify-between px-4 h-14">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-violet-600 rounded flex items-center justify-center text-xs font-bold">P</div>
+          <span className="font-semibold text-sm">ParkMitra</span>
         </div>
-        <button 
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 rounded-lg hover:bg-white/10 transition-colors"
-        >
-          {isMobileMenuOpen ? (
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          )}
+        <button onClick={() => setMobileOpen(!mobileOpen)} className="p-1.5 rounded-lg hover:bg-white/8 text-zinc-400">
+          {mobileOpen
+            ? <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            : <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          }
         </button>
       </div>
 
-      {/* Sidebar - Desktop: Always visible, Mobile: Conditional */}
-      <div className={`
-        fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-purple-700 to-indigo-800 text-white z-40 transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:h-screen
-        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+      {/* Sidebar */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-40 w-56 bg-[#0e0e0e] border-r border-white/8 flex flex-col
+        transition-transform duration-200 ease-in-out
+        md:translate-x-0 md:static md:h-screen
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        <div className="flex flex-col h-full">
-          {/* Sidebar Header (Hidden on Mobile since we have top bar) */}
-          <div className="hidden md:block p-6">
-            <div className="text-4xl mb-2">🅿️</div>
-            <h1 className="text-2xl font-bold">ParkMitra</h1>
-            <p className="text-purple-200 text-sm">Kolkata Parking</p>
+        {/* Logo */}
+        <div className="hidden md:flex items-center gap-2.5 px-5 h-14 border-b border-white/8 shrink-0">
+          <div className="w-7 h-7 bg-violet-600 rounded-lg flex items-center justify-center text-sm font-bold">P</div>
+          <div>
+            <p className="text-sm font-semibold leading-tight">ParkMitra</p>
+            <p className="text-[10px] text-zinc-500 leading-tight">Kolkata Parking</p>
           </div>
+        </div>
 
-          {/* Navigation Items */}
-          <nav className="mt-24 md:mt-6 flex-1 overflow-y-auto">
-            {navItems.map((item) => (
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3 mt-14 md:mt-0">
+          {navItems.map((item) => {
+            const active = pathname === item.href;
+            return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center px-6 py-3 text-white hover:bg-white hover:bg-opacity-10 transition-colors ${
-                  pathname === item.href ? 'bg-white bg-opacity-20 border-r-4 border-white' : ''
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-0.5 transition-colors ${
+                  active
+                    ? 'bg-violet-600/15 text-violet-400 font-medium'
+                    : 'text-zinc-500 hover:text-zinc-200 hover:bg-white/5'
                 }`}
               >
-                <span className="text-2xl mr-3">{item.icon}</span>
-                <span className="font-medium">{item.label}</span>
+                <span className={active ? 'text-violet-400' : 'text-zinc-600'}>{item.icon}</span>
+                {item.label}
               </Link>
-            ))}
-          </nav>
+            );
+          })}
+        </nav>
 
-          {/* User Profile & Logout */}
-          <div className="p-6 border-t border-purple-600 bg-purple-800/50">
-            <div className="mb-4">
-              <p className="text-sm text-purple-200">Logged in as</p>
-              <p className="font-medium truncate">{admin.name}</p>
-              <p className="text-xs text-purple-300 truncate">{admin.email}</p>
+        {/* User */}
+        <div className="p-3 border-t border-white/8 shrink-0">
+          <div className="flex items-center gap-3 px-2 py-2 mb-2">
+            <div className="w-7 h-7 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-xs font-bold text-violet-400 shrink-0">
+              {admin.name?.[0]?.toUpperCase()}
             </div>
-            <button
-              onClick={handleLogout}
-              className="w-full bg-white bg-opacity-10 hover:bg-opacity-20 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-            >
-              <span>Logout</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-zinc-200 truncate">{admin.name}</p>
+              <p className="text-[10px] text-zinc-600 truncate">{admin.email}</p>
+            </div>
           </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 text-xs text-zinc-500 hover:text-zinc-200 bg-white/5 hover:bg-white/8 py-2 rounded-lg transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            Logout
+          </button>
         </div>
-      </div>
+      </aside>
 
-      {/* Overlay for mobile when menu is open */}
-      {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 bg-black/60 z-30 md:hidden" onClick={() => setMobileOpen(false)} />
       )}
 
-      {/* Main Content Area */}
-      <div className="flex-1 min-w-0 bg-gray-50">
-        <div className="p-4 md:p-8 max-w-7xl mx-auto">
+      {/* Main */}
+      <main className="flex-1 min-w-0 pt-14 md:pt-0">
+        <div className="p-5 md:p-8 max-w-6xl mx-auto">
           {children}
         </div>
-      </div>
+      </main>
     </div>
   );
 }
