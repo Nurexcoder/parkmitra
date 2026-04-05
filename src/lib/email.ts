@@ -105,7 +105,7 @@ export async function sendQREmail(
 
               <div class="footer">
                 <p>This is an automated email. Please do not reply.</p>
-                <p>© 2026 ParkMitra - Kolkata</p>
+                <p>© 2026 ParkMitra</p>
               </div>
             </div>
           </body>

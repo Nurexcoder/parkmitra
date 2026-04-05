@@ -6,6 +6,7 @@ export interface IRider extends Document {
   email: string;
   vehicle_number: string;
   qr_code: string;
+  image_key?: string;  // R2 object key of the plate photo
   created_at: Date;
 }
 
@@ -26,14 +27,18 @@ const RiderSchema = new Schema<IRider>({
   },
   vehicle_number: {
     type: String,
-    required: true,
+    required: false,
     uppercase: true,
     trim: true,
+    default: '',
   },
   qr_code: {
     type: String,
     required: true,
     unique: true,
+  },
+  image_key: {
+    type: String,
   },
   created_at: {
     type: Date,

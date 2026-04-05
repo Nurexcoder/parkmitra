@@ -8,6 +8,8 @@ export interface IParkingSession extends Document {
   amount?: number;
   status: 'INSIDE' | 'EXITED';
   payment_status: 'PENDING' | 'PAID';
+  payment_method?: 'cash' | 'upi';
+  razorpay_payment_link_id?: string;
   created_at: Date;
 }
 
@@ -39,6 +41,13 @@ const ParkingSessionSchema = new Schema<IParkingSession>({
     type: String,
     enum: ['PENDING', 'PAID'],
     required: true,
+  },
+  payment_method: {
+    type: String,
+    enum: ['cash', 'upi'],
+  },
+  razorpay_payment_link_id: {
+    type: String,
   },
   created_at: {
     type: Date,

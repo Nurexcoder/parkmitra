@@ -2,8 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://parkmitra.mugiwara.dev'),
   title: 'ParkMitra - Smart Parking Management',
-  description: 'QR-based parking management system for Kolkata',
+  description: 'QR-based parking management system',
 };
 
 export default function RootLayout({

@@ -37,11 +37,11 @@ export default function DashboardStats() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 md:gap-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-[#161616] border border-white/8 rounded-xl p-5 animate-pulse">
-            <div className="h-3 bg-white/8 rounded w-1/2 mb-4" />
-            <div className="h-8 bg-white/8 rounded w-1/3" />
+          <div key={i} className="bg-[#161616] border border-white/8 rounded-xl p-3 md:p-5 animate-pulse">
+            <div className="h-2.5 bg-white/8 rounded w-3/4 mb-3" />
+            <div className="h-7 bg-white/8 rounded w-1/2" />
           </div>
         ))}
       </div>
@@ -82,14 +82,14 @@ export default function DashboardStats() {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-3 gap-2 md:gap-4">
       {cards.map(({ label, value, color, icon }) => (
-        <div key={label} className="bg-[#161616] border border-white/8 rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">{label}</p>
-            <span className={`${color} opacity-60`}>{icon}</span>
+        <div key={label} className="bg-[#161616] border border-white/8 rounded-xl p-3 md:p-5">
+          <div className="flex items-start justify-between mb-2 md:mb-3">
+            <p className="text-[10px] md:text-xs text-zinc-500 font-medium uppercase tracking-wider leading-tight">{label}</p>
+            <span className={`${color} opacity-60 hidden md:block`}>{icon}</span>
           </div>
-          <p className={`text-3xl font-bold ${color}`}>{value}</p>
+          <p className={`text-xl md:text-3xl font-bold ${color}`}>{value}</p>
         </div>
       ))}
     </div>

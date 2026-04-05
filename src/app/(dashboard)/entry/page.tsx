@@ -2,25 +2,30 @@
 
 import { useState } from 'react';
 import QRScanner from '@/components/QRScanner';
+import PlateScanner from '@/components/PlateScanner';
+
+type Tab = 'qr' | 'plate';
 
 export default function EntryPage() {
+  const [tab, setTab] = useState<Tab>('qr');
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleScan = async (riderId: string) => {
+  const token = () => localStorage.getItem('token');
+
+  const recordEntry = async (body: object) => {
     setLoading(true);
     setError('');
     setResult(null);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/entry', {
+      const res = await fetch(tab === 'qr' ? '/api/entry' : '/api/entry/plate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ rider_id: riderId }),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+        body: JSON.stringify(body),
       });
-      const data = await response.json();
-      if (response.ok) setResult(data);
+      const data = await res.json();
+      if (res.ok) setResult(data);
       else setError(data.error || 'Entry failed');
     } catch {
       setError('Network error. Please try again.');
@@ -29,31 +34,72 @@ export default function EntryPage() {
     }
   };
 
+  const handleQrScan = (riderId: string) => recordEntry({ rider_id: riderId });
+  const handlePlateScan = (plate: string) => recordEntry({ plate_number: plate });
+
   const reset = () => { setResult(null); setError(''); };
+
+  const instructions = {
+    qr: [
+      'Press "Start Scanning" to open the camera.',
+      "Hold the rider's QR code in front of the camera.",
+      'Entry is recorded automatically once detected.',
+    ],
+    plate: [
+      'Press "Capture Plate" to open the camera.',
+      'Align the vehicle\'s number plate within the guide.',
+      'Entry is recorded once the plate is confirmed.',
+    ],
+  };
 
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-zinc-100 tracking-tight">Vehicle Entry</h1>
-        <p className="text-zinc-500 text-sm mt-0.5">Scan the rider's QR code to record their entry</p>
+        <p className="text-zinc-500 text-sm mt-0.5">Record entry by QR code or number plate</p>
       </div>
 
       <div className="grid md:grid-cols-5 gap-5">
         <div className="md:col-span-3">
           <div className="bg-[#161616] border border-white/8 rounded-xl p-5">
-            <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-4">Camera</p>
-            <QRScanner onScan={handleScan} />
+            {/* Tab switcher */}
+            <div className="flex gap-1 bg-white/5 rounded-lg p-1 mb-4">
+              {(['qr', 'plate'] as Tab[]).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => { setTab(t); reset(); }}
+                  className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-colors ${
+                    tab === t
+                      ? 'bg-violet-600 text-white'
+                      : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  {t === 'qr' ? 'QR Code' : 'Number Plate'}
+                </button>
+              ))}
+            </div>
+
+            {tab === 'qr' && !result && (
+              <QRScanner onScan={handleQrScan} />
+            )}
+            {tab === 'plate' && !result && !loading && (
+              <PlateScanner onDetect={handlePlateScan} />
+            )}
+            {(result || loading) && (
+              <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${result ? 'bg-emerald-500/15' : 'bg-violet-500/15'}`}>
+                  {result
+                    ? <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    : <div className="w-5 h-5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+                  }
+                </div>
+                <p className="text-sm text-zinc-500">{result ? 'Entry recorded' : 'Recording…'}</p>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="md:col-span-2 flex flex-col gap-4">
-          {loading && (
-            <div className="bg-[#161616] border border-white/8 rounded-xl p-6 flex flex-col items-center justify-center gap-3 min-h-48">
-              <div className="w-7 h-7 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm text-zinc-500">Recording entry…</p>
-            </div>
-          )}
-
           {result && !loading && (
             <div className="bg-[#161616] border border-white/8 rounded-xl overflow-hidden">
               <div className="bg-emerald-500/15 border-b border-emerald-500/20 px-5 py-4 flex items-center gap-3">
@@ -105,13 +151,9 @@ export default function EntryPage() {
             <div className="bg-[#161616] border border-white/8 rounded-xl p-5">
               <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-4">Instructions</p>
               <ol className="space-y-4">
-                {[
-                  { n: '1', text: 'Press "Start Scanning" to open the camera.' },
-                  { n: '2', text: "Hold the rider's QR code in front of the camera." },
-                  { n: '3', text: 'Entry is recorded automatically once the code is detected.' },
-                ].map(({ n, text }) => (
-                  <li key={n} className="flex items-start gap-3">
-                    <span className="w-5 h-5 rounded-full bg-violet-600/15 border border-violet-500/25 text-violet-400 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">{n}</span>
+                {instructions[tab].map((text, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <span className="w-5 h-5 rounded-full bg-violet-600/15 border border-violet-500/25 text-violet-400 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
                     <p className="text-zinc-500 text-sm leading-relaxed">{text}</p>
                   </li>
                 ))}

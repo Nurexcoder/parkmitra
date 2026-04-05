@@ -31,6 +31,52 @@ const navItems = [
   },
 ];
 
+function SidebarNav({ admin, pathname, onLogout }: { admin: any; pathname: string; onLogout: () => void }) {
+  return (
+    <>
+      <nav className="flex-1 overflow-y-auto py-4 px-3">
+        {navItems.map((item) => {
+          const active = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-0.5 transition-colors ${
+                active
+                  ? 'bg-violet-600/15 text-violet-400 font-medium'
+                  : 'text-zinc-500 hover:text-zinc-200 hover:bg-white/5'
+              }`}
+            >
+              <span className={active ? 'text-violet-400' : 'text-zinc-600'}>{item.icon}</span>
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+      <div className="p-3 border-t border-white/8 shrink-0">
+        <div className="flex items-center gap-3 px-2 py-2 mb-2">
+          <div className="w-7 h-7 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-xs font-bold text-violet-400 shrink-0">
+            {admin.name?.[0]?.toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-zinc-200 truncate">{admin.name}</p>
+            <p className="text-[10px] text-zinc-600 truncate">{admin.email}</p>
+          </div>
+        </div>
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center justify-center gap-2 text-xs text-zinc-500 hover:text-zinc-200 bg-white/5 hover:bg-white/8 py-2 rounded-lg transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+          Logout
+        </button>
+      </div>
+    </>
+  );
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -63,7 +109,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-[#0c0c0c] text-white flex">
 
-      {/* Mobile top bar */}
+      {/* ── Desktop sidebar (hidden on mobile, always in-flow on md+) ── */}
+      <aside className="hidden md:flex flex-col w-56 shrink-0 bg-[#0e0e0e] border-r border-white/8 h-screen sticky top-0">
+        <div className="flex items-center gap-2.5 px-5 h-14 border-b border-white/8 shrink-0">
+          <div className="w-7 h-7 bg-violet-600 rounded-lg flex items-center justify-center text-sm font-bold">P</div>
+          <div>
+            <p className="text-sm font-semibold leading-tight">ParkMitra</p>
+            <p className="text-[10px] text-zinc-500 leading-tight">Parking Management</p>
+          </div>
+        </div>
+        <SidebarNav admin={admin} pathname={pathname} onLogout={handleLogout} />
+      </aside>
+
+      {/* ── Mobile: top bar ── */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#0e0e0e] border-b border-white/8 flex items-center justify-between px-4 h-14">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 bg-violet-600 rounded flex items-center justify-center text-xs font-bold">P</div>
@@ -77,77 +135,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </button>
       </div>
 
-      {/* Sidebar */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-40 w-56 bg-[#0e0e0e] border-r border-white/8 flex flex-col
-        transition-transform duration-200 ease-in-out
-        md:translate-x-0 md:static md:h-screen
-        ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
-        {/* Logo */}
-        <div className="hidden md:flex items-center gap-2.5 px-5 h-14 border-b border-white/8 shrink-0">
-          <div className="w-7 h-7 bg-violet-600 rounded-lg flex items-center justify-center text-sm font-bold">P</div>
-          <div>
-            <p className="text-sm font-semibold leading-tight">ParkMitra</p>
-            <p className="text-[10px] text-zinc-500 leading-tight">Kolkata Parking</p>
-          </div>
-        </div>
-
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 mt-14 md:mt-0">
-          {navItems.map((item) => {
-            const active = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-0.5 transition-colors ${
-                  active
-                    ? 'bg-violet-600/15 text-violet-400 font-medium'
-                    : 'text-zinc-500 hover:text-zinc-200 hover:bg-white/5'
-                }`}
-              >
-                <span className={active ? 'text-violet-400' : 'text-zinc-600'}>{item.icon}</span>
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* User */}
-        <div className="p-3 border-t border-white/8 shrink-0">
-          <div className="flex items-center gap-3 px-2 py-2 mb-2">
-            <div className="w-7 h-7 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-xs font-bold text-violet-400 shrink-0">
-              {admin.name?.[0]?.toUpperCase()}
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-zinc-200 truncate">{admin.name}</p>
-              <p className="text-[10px] text-zinc-600 truncate">{admin.email}</p>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 text-xs text-zinc-500 hover:text-zinc-200 bg-white/5 hover:bg-white/8 py-2 rounded-lg transition-colors"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-            </svg>
-            Logout
-          </button>
-        </div>
-      </aside>
-
-      {/* Mobile overlay */}
+      {/* ── Mobile: drawer overlay (only rendered when open) ── */}
       {mobileOpen && (
-        <div className="fixed inset-0 bg-black/60 z-30 md:hidden" onClick={() => setMobileOpen(false)} />
+        <div className="md:hidden">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40 bg-black/60"
+            onClick={() => setMobileOpen(false)}
+          />
+          {/* Drawer */}
+          <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-[#0e0e0e] border-r border-white/8 flex flex-col pt-14">
+            <SidebarNav admin={admin} pathname={pathname} onLogout={handleLogout} />
+          </aside>
+        </div>
       )}
 
-      {/* Main */}
+      {/* ── Main content ── */}
       <main className="flex-1 min-w-0 pt-14 md:pt-0">
-        <div className="p-5 md:p-8 max-w-6xl mx-auto">
+        <div className="p-4 md:p-8 max-w-6xl mx-auto">
           {children}
         </div>
       </main>
+
     </div>
   );
 }

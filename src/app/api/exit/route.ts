@@ -20,10 +20,7 @@ export const POST = withAuth(async (request: NextRequest) => {
     }
 
     // Find active session
-    const session = await ParkingSession.findOne({
-      rider_id,
-      status: 'INSIDE',
-    }).populate('rider_id');
+    const session = await ParkingSession.findOne({ rider_id, status: 'INSIDE' });
 
     if (!session) {
       return Response.json(
@@ -32,18 +29,19 @@ export const POST = withAuth(async (request: NextRequest) => {
       );
     }
 
+    const rider = await Rider.findById(session.rider_id);
+    if (!rider) {
+      return Response.json({ error: 'Rider not found' }, { status: 404 });
+    }
+
     // Calculate duration in minutes
     const exitTime = new Date();
     const entryTime = new Date(session.entry_time);
     const durationMs = exitTime.getTime() - entryTime.getTime();
     const durationMinutes = Math.ceil(durationMs / (1000 * 60));
 
-    // Calculate amount based on pricing rules
-    // First 30 minutes = ₹20
-    // More than 30 minutes = ₹30
+    // First 30 minutes = ₹20, more than 30 minutes = ₹30
     const amount = durationMinutes <= 30 ? 20 : 30;
-
-    const rider = session.rider_id as any;
 
     return Response.json({
       success: true,

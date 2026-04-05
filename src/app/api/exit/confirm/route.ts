@@ -9,7 +9,7 @@ export const POST = withAuth(async (request: NextRequest) => {
     await connectDB();
     
     const body = await request.json();
-    const { session_id, amount, duration_minutes } = body;
+    const { session_id, amount, duration_minutes, payment_method = 'cash', razorpay_payment_link_id } = body;
 
     if (!session_id || !amount || !duration_minutes) {
       return Response.json(
@@ -41,6 +41,8 @@ export const POST = withAuth(async (request: NextRequest) => {
     session.amount = amount;
     session.status = 'EXITED';
     session.payment_status = 'PAID';
+    session.payment_method = payment_method;
+    if (razorpay_payment_link_id) session.razorpay_payment_link_id = razorpay_payment_link_id;
 
     await session.save();
 
