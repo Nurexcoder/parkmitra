@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import RiderForm from '@/components/RiderForm';
 
-export default function EditRiderPage({ params }: { params: { id: string } }) {
+export default function EditRiderPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [rider, setRider] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -14,7 +15,7 @@ export default function EditRiderPage({ params }: { params: { id: string } }) {
     const fetchRider = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`/api/riders/${params.id}`, {
+        const response = await fetch(`/api/riders/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -35,7 +36,7 @@ export default function EditRiderPage({ params }: { params: { id: string } }) {
     };
 
     fetchRider();
-  }, [params.id]);
+  }, [id]);
 
   if (loading) {
     return (

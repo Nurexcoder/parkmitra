@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-interface AdminUser { _id: string; name: string; email: string; createdAt: string; }
+interface AdminUser { _id: string; name: string; email: string; created_at: string; }
 
 const inputCls = "w-full bg-[#1a1a1a] border border-white/10 text-zinc-200 placeholder-zinc-600 text-sm px-4 py-2.5 rounded-lg focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20";
 
@@ -99,7 +99,7 @@ export default function AdminsPage() {
                   <tr key={admin._id} className="border-b border-white/5 last:border-0 hover:bg-white/3 transition-colors">
                     <td className="px-5 py-3.5 text-sm font-medium text-zinc-200">{admin.name}</td>
                     <td className="px-5 py-3.5 text-sm text-zinc-500">{admin.email}</td>
-                    <td className="px-5 py-3.5 text-xs text-zinc-600">{new Date(admin.createdAt).toLocaleDateString()}</td>
+                    <td className="px-5 py-3.5 text-xs text-zinc-600">{admin.created_at ? new Date(admin.created_at).toLocaleDateString() : '—'}</td>
                   </tr>
                 ))
               )}
