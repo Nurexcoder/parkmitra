@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import PlateScanner from '@/components/PlateScanner';
 
 interface RiderFormProps {
   initialData?: { _id: string; name: string; phone: string; vehicle_number: string; email: string; };
@@ -16,12 +17,13 @@ export default function RiderForm({ initialData, isEdit = false }: RiderFormProp
   const [formData, setFormData] = useState({ name: '', phone: '', vehicle_number: '', email: '' });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showScanner, setShowScanner] = useState(false);
 
   useEffect(() => {
     if (initialData) setFormData({ name: initialData.name, phone: initialData.phone, vehicle_number: initialData.vehicle_number, email: initialData.email || '' });
   }, [initialData]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
@@ -72,10 +74,45 @@ export default function RiderForm({ initialData, isEdit = false }: RiderFormProp
           <label className={labelCls}>Phone <span className="text-red-500">*</span></label>
           <input type="tel" required value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className={inputCls} placeholder="Enter phone number" />
         </div>
-        <div>
+
+        {/* Vehicle number with plate scan option */}
+        <div className="md:col-span-2">
           <label className={labelCls}>Vehicle Number <span className="text-red-500">*</span></label>
-          <input type="text" required value={formData.vehicle_number} onChange={(e) => setFormData({ ...formData, vehicle_number: e.target.value.toUpperCase() })} className={`${inputCls} uppercase`} placeholder="WB 01 AB 1234" />
+          {showScanner ? (
+            <div className="mt-1">
+              <PlateScanner
+                onDetect={(plate) => {
+                  setFormData((f) => ({ ...f, vehicle_number: plate }));
+                  setShowScanner(false);
+                }}
+                onCancel={() => setShowScanner(false)}
+              />
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                required
+                value={formData.vehicle_number}
+                onChange={(e) => setFormData({ ...formData, vehicle_number: e.target.value.toUpperCase() })}
+                className={`${inputCls} uppercase flex-1`}
+                placeholder="WB 01 AB 1234"
+              />
+              <button
+                type="button"
+                onClick={() => setShowScanner(true)}
+                title="Scan plate with camera"
+                className="shrink-0 px-3 bg-white/5 hover:bg-violet-600/20 border border-white/10 hover:border-violet-500/40 text-zinc-400 hover:text-violet-400 rounded-lg transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
+
         <div>
           <label className={labelCls}>Email <span className="text-red-500">*</span></label>
           <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className={inputCls} placeholder="rider@example.com" />
