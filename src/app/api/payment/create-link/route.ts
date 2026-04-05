@@ -16,7 +16,9 @@ export const POST = withAuth(async (request: NextRequest) => {
       );
     }
 
-    const paymentLink = await razorpay.paymentLink.create({
+    // Cast to any — Razorpay SDK types incorrectly require `customer` when `options` is present
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const paymentLink = await (razorpay.paymentLink.create as any)({
       amount: amount * 100, // Razorpay expects paise
       currency: 'INR',
       description: `Parking fee — ${vehicle_number}`,

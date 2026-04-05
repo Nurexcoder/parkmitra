@@ -161,8 +161,15 @@ export default function PlateScanner({ onDetect, onCancel, autoOcr = true }: Pla
           <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
           {/* Plate guide overlay */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="border-2 border-violet-400/60 rounded-md w-3/4 h-1/4 flex items-center justify-center">
-              <span className="text-violet-300/70 text-xs font-medium tracking-wide">Align plate here</span>
+            <div className="relative w-[88%] h-[38%]">
+              {/* Corner markers */}
+              <span className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-violet-400 rounded-tl" />
+              <span className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-violet-400 rounded-tr" />
+              <span className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-violet-400 rounded-bl" />
+              <span className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-violet-400 rounded-br" />
+              <span className="absolute inset-0 flex items-center justify-center text-violet-300/60 text-xs font-medium tracking-wide">
+                Align plate here
+              </span>
             </div>
           </div>
         </div>
