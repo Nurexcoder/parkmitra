@@ -2,35 +2,6 @@
 
 import { useRef, useState, useCallback, useEffect } from 'react';
 
-// Indian plate format — covers BH series too: MH01AB1234, WB01AB1234, 22BH1234AA
-const PLATE_REGEX = /([A-Z]{2}[\s-]?\d{1,2}[\s-]?[A-Z]{1,3}[\s-]?\d{4}|\d{2}BH\d{4}[A-Z]{1,2})/i;
-
-function normalise(raw: string): string {
-  return raw.replace(/[\s-]/g, '').toUpperCase();
-}
-
-function preprocessCanvas(src: HTMLCanvasElement): HTMLCanvasElement {
-  const dst = document.createElement('canvas');
-  // Upscale for better OCR — Tesseract likes at least 300px wide
-  const scale = Math.max(1, 640 / src.width);
-  dst.width = src.width * scale;
-  dst.height = src.height * scale;
-  const ctx = dst.getContext('2d')!;
-
-  ctx.drawImage(src, 0, 0, dst.width, dst.height);
-
-  // Grayscale + contrast boost
-  const img = ctx.getImageData(0, 0, dst.width, dst.height);
-  const d = img.data;
-  for (let i = 0; i < d.length; i += 4) {
-    const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-    // Contrast stretch: push dark → darker, light → lighter
-    const stretched = Math.min(255, Math.max(0, (gray - 128) * 1.5 + 128));
-    d[i] = d[i + 1] = d[i + 2] = stretched;
-  }
-  ctx.putImageData(img, 0, 0);
-  return dst;
-}
 
 interface PlateScannerProps {
   /** Called with the normalised plate string once detected */
@@ -86,6 +57,18 @@ export default function PlateScanner({ onDetect, onCancel, autoOcr = true }: Pla
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
 
+    // Wait up to 2s for video to report non-zero dimensions
+    let attempts = 0;
+    while ((video.videoWidth === 0 || video.videoHeight === 0) && attempts < 20) {
+      await new Promise(r => setTimeout(r, 100));
+      attempts++;
+    }
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      setState('error');
+      setErrorMsg('Camera not ready. Please try again.');
+      return;
+    }
+
     setState('capturing');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -104,35 +87,65 @@ export default function PlateScanner({ onDetect, onCancel, autoOcr = true }: Pla
     setErrorMsg('');
 
     try {
-      // Lazy-load Tesseract — keeps initial bundle small
-      const { createWorker } = await import('tesseract.js');
-      const processed = preprocessCanvas(canvas);
+      // Resize to max 800px wide before uploading — reduces R2 + processing cost
+      const resized = document.createElement('canvas');
+      const scale = Math.min(1, 800 / canvas.width);
+      resized.width = canvas.width * scale;
+      resized.height = canvas.height * scale;
+      resized.getContext('2d')!.drawImage(canvas, 0, 0, resized.width, resized.height);
+      const image = resized.toDataURL('image/jpeg', 0.85);
 
-      const worker = await createWorker('eng');
-      await worker.setParameters({
-        // Only alphanumeric — plates never have other chars
-        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ',
-        // PSM 7 = single text line, good for plates
-        tessedit_pageseg_mode: '7' as never,
+      const token = localStorage.getItem('token');
+
+      // Step 1: Upload to R2 + enqueue Modal job
+      const startRes = await fetch('/api/ocr/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ image }),
       });
-
-      const { data } = await worker.recognize(processed);
-      await worker.terminate();
-
-      const raw = data.text.trim().toUpperCase();
-      const match = raw.match(PLATE_REGEX);
-
-      if (match) {
-        const plate = normalise(match[0]);
-        setDetected(plate);
-        setState('done');
-      } else {
+      const startData = await startRes.json();
+      if (!startRes.ok) {
         setState('error');
-        setErrorMsg(`Could not read a plate. Detected: "${raw || '(nothing)'}". Try better lighting or move closer.`);
+        setErrorMsg(startData.error ?? 'Failed to start OCR job.');
+        return;
       }
+
+      const { jobId } = startData;
+
+      // Step 2: Poll for result every 2s (max 60s)
+      const deadline = Date.now() + 60_000;
+      while (Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, 2000));
+
+        const statusRes = await fetch(`/api/ocr/status/${jobId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const status = await statusRes.json();
+
+        if (status.status === 'done') {
+          if (status.plate) {
+            setDetected(status.plate);
+            setState('done');
+          } else {
+            setState('error');
+            setErrorMsg('No plate detected. Try better lighting or move closer.');
+          }
+          return;
+        }
+
+        if (status.status === 'failed') {
+          setState('error');
+          setErrorMsg(status.error ?? 'OCR failed. Please try again.');
+          return;
+        }
+        // status === 'pending' — keep polling
+      }
+
+      setState('error');
+      setErrorMsg('OCR timed out. Please try again.');
     } catch (err) {
       setState('error');
-      setErrorMsg('OCR failed. Please try again.');
+      setErrorMsg('Network error. Please try again.');
       console.error(err);
     }
   };

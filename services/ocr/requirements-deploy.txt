@@ -1,0 +1,3 @@
+# Install this on your local machine to deploy to Modal
+# pip install -r services/ocr/requirements-deploy.txt
+modal>=0.64.0

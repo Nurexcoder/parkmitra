@@ -115,7 +115,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="w-7 h-7 bg-violet-600 rounded-lg flex items-center justify-center text-sm font-bold">P</div>
           <div>
             <p className="text-sm font-semibold leading-tight">ParkMitra</p>
-            <p className="text-[10px] text-zinc-500 leading-tight">Kolkata Parking</p>
+            <p className="text-[10px] text-zinc-500 leading-tight">Parking Management</p>
           </div>
         </div>
         <SidebarNav admin={admin} pathname={pathname} onLogout={handleLogout} />

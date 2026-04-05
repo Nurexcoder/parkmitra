@@ -47,26 +47,33 @@ export const POST = withAuth(async (request: NextRequest) => {
     await connectDB();
     
     const body = await request.json();
-    const { name, phone, vehicle_number, email } = body;
+    const { name, phone, vehicle_number, email, image_key } = body;
 
-    // Validate required fields
-    if (!name || !phone || !vehicle_number || !email) {
+    // Validate required fields — vehicle_number OR image_key must be present
+    if (!name || !phone || !email) {
       return Response.json(
-        { error: 'All fields are required' },
+        { error: 'Name, phone, and email are required' },
+        { status: 400 }
+      );
+    }
+    if (!vehicle_number && !image_key) {
+      return Response.json(
+        { error: 'Either vehicle number or a plate photo is required' },
         { status: 400 }
       );
     }
 
-    // Check if vehicle already exists
-    const existingRider = await Rider.findOne({ 
-      vehicle_number: vehicle_number.toUpperCase() 
-    });
-    
-    if (existingRider) {
-      return Response.json(
-        { error: 'Vehicle number already registered' },
-        { status: 400 }
-      );
+    // Check if vehicle already exists (only if vehicle_number provided)
+    if (vehicle_number) {
+      const existingRider = await Rider.findOne({
+        vehicle_number: vehicle_number.toUpperCase()
+      });
+      if (existingRider) {
+        return Response.json(
+          { error: 'Vehicle number already registered' },
+          { status: 400 }
+        );
+      }
     }
 
     // Create new rider instance (generates _id automatically)
@@ -74,7 +81,8 @@ export const POST = withAuth(async (request: NextRequest) => {
       name,
       phone,
       email,
-      vehicle_number: vehicle_number.toUpperCase(),
+      vehicle_number: vehicle_number ? vehicle_number.toUpperCase() : '',
+      image_key: image_key || undefined,
       qr_code: 'placeholder', // Temporary placeholder
     });
 
